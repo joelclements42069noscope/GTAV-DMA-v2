@@ -1,0 +1,15 @@
+tunables.bin - How to get it
+============================
+
+tunables.bin is NOT included because it's generated at runtime by YimMenu.
+Without it, these features will be disabled: RP Multiplier, No Idle Kick, Free Appearance Change.
+
+How to obtain tunables.bin:
+1. Run YimMenu V2 injected into GTA V Online (on a 1PC setup or VM)
+2. YimMenu will auto-generate tunables.bin in its working directory
+3. Copy tunables.bin to this folder (next to the compiled .exe)
+
+The DMA tool will load it on startup and show "Tunables loaded: X entries" in the Tunables section.
+If the file is missing, the menu will show "Tunables not loaded" and those features are simply greyed out.
+
+Note: tunables.bin may need to be regenerated after major GTA V title updates.
