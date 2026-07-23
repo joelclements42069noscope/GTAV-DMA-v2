@@ -15,8 +15,11 @@ public:
 
 private:
 	// Script local variable offsets (from YimMenu)
-	static constexpr int SLOTS_RESULTS_TABLE = 1350;
-	static constexpr int SPIN_STATE_VAR = 1668;
+	// Re-based for Enhanced 1.73 -- were 1350 / 1668 pre-1.73.
+	// Upstream: src/game/features/recovery/Casino.cpp (slots_random_results_table
+	// is Static_1381.f_1[][] in the decompiled casino_slots script).
+	static constexpr int SLOTS_RESULTS_TABLE = 1357;
+	static constexpr int SPIN_STATE_VAR = 1675;
 	static constexpr int WINNING_VALUE = 6;
 
 	// Blacklisted slot indices that shouldn't be modified

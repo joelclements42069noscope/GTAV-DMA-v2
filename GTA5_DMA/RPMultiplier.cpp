@@ -10,6 +10,15 @@ bool RPMultiplier::OnDMAFrame()
 	if (!TunableService::IsLoaded())
 		return true;
 
+	// Validate tunables.bin against live memory once, now that a session is up.
+	// A stale bin (built on a different game build) maps XP_MULTIPLIER to the
+	// wrong global, so writes silently do nothing -- surface that clearly.
+	if (!FreshnessChecked)
+	{
+		FreshnessChecked = true;
+		TunableService::ValidateFreshness();
+	}
+
 	// Try hash lookup first
 	DWORD globalIdx = TunableService::GetTunableGlobalIndex(XP_MULTIPLIER_HASH);
 

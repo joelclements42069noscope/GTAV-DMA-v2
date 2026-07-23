@@ -1,18 +1,51 @@
-C:\Users\zenex\Desktop\GTA5_DMA\ImGui\imgui.cpp;C:\Users\zenex\Desktop\GTA5_DMA\GTA5_DMA\x64\Release\imgui.obj
-C:\Users\zenex\Desktop\GTA5_DMA\ImGui\imgui_demo.cpp;C:\Users\zenex\Desktop\GTA5_DMA\GTA5_DMA\x64\Release\imgui_demo.obj
-C:\Users\zenex\Desktop\GTA5_DMA\ImGui\imgui_draw.cpp;C:\Users\zenex\Desktop\GTA5_DMA\GTA5_DMA\x64\Release\imgui_draw.obj
-C:\Users\zenex\Desktop\GTA5_DMA\ImGui\imgui_impl_dx11.cpp;C:\Users\zenex\Desktop\GTA5_DMA\GTA5_DMA\x64\Release\imgui_impl_dx11.obj
-C:\Users\zenex\Desktop\GTA5_DMA\ImGui\imgui_impl_win32.cpp;C:\Users\zenex\Desktop\GTA5_DMA\GTA5_DMA\x64\Release\imgui_impl_win32.obj
-C:\Users\zenex\Desktop\GTA5_DMA\ImGui\imgui_tables.cpp;C:\Users\zenex\Desktop\GTA5_DMA\GTA5_DMA\x64\Release\imgui_tables.obj
-C:\Users\zenex\Desktop\GTA5_DMA\ImGui\imgui_widgets.cpp;C:\Users\zenex\Desktop\GTA5_DMA\GTA5_DMA\x64\Release\imgui_widgets.obj
-C:\Users\zenex\Desktop\GTA5_DMA\GTA5_DMA\Dev.cpp;C:\Users\zenex\Desktop\GTA5_DMA\GTA5_DMA\x64\Release\Dev.obj
-C:\Users\zenex\Desktop\GTA5_DMA\GTA5_DMA\GodMode.cpp;C:\Users\zenex\Desktop\GTA5_DMA\GTA5_DMA\x64\Release\GodMode.obj
-C:\Users\zenex\Desktop\GTA5_DMA\GTA5_DMA\Teleport.cpp;C:\Users\zenex\Desktop\GTA5_DMA\GTA5_DMA\x64\Release\Teleport.obj
-C:\Users\zenex\Desktop\GTA5_DMA\GTA5_DMA\WeaponInspector.cpp;C:\Users\zenex\Desktop\GTA5_DMA\GTA5_DMA\x64\Release\WeaponInspector.obj
-C:\Users\zenex\Desktop\GTA5_DMA\GTA5_DMA\DMA.cpp;C:\Users\zenex\Desktop\GTA5_DMA\GTA5_DMA\x64\Release\DMA.obj
-C:\Users\zenex\Desktop\GTA5_DMA\GTA5_DMA\RefreshHealth.cpp;C:\Users\zenex\Desktop\GTA5_DMA\GTA5_DMA\x64\Release\RefreshHealth.obj
-C:\Users\zenex\Desktop\GTA5_DMA\GTA5_DMA\main.cpp;C:\Users\zenex\Desktop\GTA5_DMA\GTA5_DMA\x64\Release\main.obj
-C:\Users\zenex\Desktop\GTA5_DMA\GTA5_DMA\MyImGui.cpp;C:\Users\zenex\Desktop\GTA5_DMA\GTA5_DMA\x64\Release\MyImGui.obj
-C:\Users\zenex\Desktop\GTA5_DMA\GTA5_DMA\MyMenu.cpp;C:\Users\zenex\Desktop\GTA5_DMA\GTA5_DMA\x64\Release\MyMenu.obj
-C:\Users\zenex\Desktop\GTA5_DMA\GTA5_DMA\NoWanted.cpp;C:\Users\zenex\Desktop\GTA5_DMA\GTA5_DMA\x64\Release\NoWanted.obj
-C:\Users\zenex\Desktop\GTA5_DMA\GTA5_DMA\pch.cpp;C:\Users\zenex\Desktop\GTA5_DMA\GTA5_DMA\x64\Release\pch.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\ImGui\imgui.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\imgui.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\ImGui\imgui_demo.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\imgui_demo.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\ImGui\imgui_draw.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\imgui_draw.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\ImGui\imgui_impl_dx11.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\imgui_impl_dx11.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\ImGui\imgui_impl_win32.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\imgui_impl_win32.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\ImGui\imgui_tables.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\imgui_tables.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\ImGui\imgui_widgets.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\imgui_widgets.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\CarControl.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\CarControl.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\CarGodMode.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\CarGodMode.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\CarInspector.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\CarInspector.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\Dev.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\Dev.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\GodMode.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\GodMode.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\HashChanger.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\HashChanger.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\RunSpeed.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\RunSpeed.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\Seatbelt.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\Seatbelt.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\SwimSpeed.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\SwimSpeed.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\Teleport.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\Teleport.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\WeaponInspector.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\WeaponInspector.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\DMA.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\DMA.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\RefreshHealth.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\RefreshHealth.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\main.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\main.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\MyImGui.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\MyImGui.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\MyMenu.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\MyMenu.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\NoWanted.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\NoWanted.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\pch.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\pch.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\CasinoSlotRigger.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\CasinoSlotRigger.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\HeistCuts.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\HeistCuts.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\OffTheRadar.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\OffTheRadar.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\Invisibility.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\Invisibility.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\PlayerList.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\PlayerList.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\Noclip.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\Noclip.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\TunableService.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\TunableService.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\RPMultiplier.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\RPMultiplier.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\NoIdleKick.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\NoIdleKick.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\VehicleRequest.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\VehicleRequest.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\Heightmap.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\Heightmap.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\StatsWriter.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\StatsWriter.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\HeistSetup.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\HeistSetup.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\DailyObjectives.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\DailyObjectives.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\WorldActions.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\WorldActions.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\MissionComplete.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\MissionComplete.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\CareerProgress.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\CareerProgress.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\PackedStats.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\PackedStats.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\StatDebug.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\StatDebug.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\UnlockEverything.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\UnlockEverything.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\BusinessFeatures.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\BusinessFeatures.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\core\DMAModule.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\DMAModule.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\core\DMAPatternScanner.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\DMAPatternScanner.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\core\DMAPatternCache.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\DMAPatternCache.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\core\DMAScriptHelper.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\DMAScriptHelper.obj
+z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\offsets\Pointers.cpp;z:\Dev\gtav experiment\GTAV-DMA-Build\GTA5_DMA\x64\Release\Pointers.obj

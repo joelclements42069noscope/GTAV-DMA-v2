@@ -27,3 +27,8 @@
 #include "DailyObjectives.h"
 #include "WorldActions.h"
 #include "MissionComplete.h"
+#include "CareerProgress.h"
+#include "PackedStats.h"
+#include "StatDebug.h"
+#include "UnlockEverything.h"
+#include "BusinessFeatures.h"

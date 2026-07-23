@@ -3,24 +3,30 @@
 
 // -------------------------------------------------------------------
 // Cayo Perico Heist
-// Global indices from YimMenu: ScriptGlobal(1980035).At(831).At(56)
+// Global indices from YimMenu: ScriptGlobal(1980570).At(831).At(56)
+// b1158.13: cuts base 1980035 -> 1980570 (+535).
 // -------------------------------------------------------------------
 
-static constexpr DWORD CAYO_CUTS_BASE = 1980035 + 831 + 56; // = 1980922
+static constexpr DWORD CAYO_CUTS_BASE = 1980570 + 831 + 56; // = 1981457 (was 1980922)
 // Each player cut: .At(playerIdx, 1) = base + 1 + playerIdx
 
-static constexpr DWORD CAYO_READY_BASE = 1981146;
+// NOTE: upstream commit 5d9ab8d (b1158.13) sets this to 1973762, but that is
+// the Diamond Casino cuts base -- an upstream copy/paste bug (it is lower than
+// the Casino ready base and breaks the prior cuts<ready ordering). We instead
+// apply the same +535 shift seen on the Cayo cuts base: 1981146 -> 1981681.
+static constexpr DWORD CAYO_READY_BASE = 1981681; // (was 1981146; upstream's 1973762 is wrong)
 // Force ready: .At(i, 27).At(7).At(i, 1) = base + 1 + i*27 + 7 + 1 + i = base + 9 + 28*i
 
 // -------------------------------------------------------------------
 // Diamond Casino Heist
-// Global indices from YimMenu: ScriptGlobal(1973231).At(1497).At(736).At(92)
+// Global indices from YimMenu: ScriptGlobal(1973762).At(1497).At(736).At(92)
+// b1158.13: cuts base 1973231 -> 1973762 (+531), ready 1977594 -> 1978125.
 // -------------------------------------------------------------------
 
-static constexpr DWORD CASINO_CUTS_BASE = 1973231 + 1497 + 736 + 92; // = 1975556
+static constexpr DWORD CASINO_CUTS_BASE = 1973762 + 1497 + 736 + 92; // = 1976087 (was 1975556)
 // Each player cut: .At(playerIdx, 1) = base + 1 + playerIdx
 
-static constexpr DWORD CASINO_READY_BASE = 1977594;
+static constexpr DWORD CASINO_READY_BASE = 1978125; // (was 1977594)
 // Force ready: .At(i, 68).At(7).At(i, 1) = base + 1 + i*68 + 7 + 1 + i = base + 9 + 69*i
 
 void HeistCuts::SetCayoCuts()

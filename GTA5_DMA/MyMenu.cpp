@@ -134,12 +134,47 @@ bool MyMenu::Render(HWND hwnd)
 		DailyObjectives::Render();
 		ImGui::Unindent();
 	}
+	ImGui::Spacing();
+	if (ImGui::CollapsingHeader("Career Progress"))
+	{
+		ImGui::Indent();
+		CareerProgress::Render();
+		ImGui::Unindent();
+	}
+	ImGui::Spacing();
+	if (ImGui::CollapsingHeader("Unlock Everything"))
+	{
+		ImGui::Indent();
+		UnlockEverything::Render();
+		ImGui::Unindent();
+	}
+	ImGui::Spacing();
+	if (ImGui::CollapsingHeader("Businesses (Nightclub / Restocker / Cluckin' Bell)"))
+	{
+		ImGui::Indent();
+		BusinessFeatures::Render();
+		ImGui::Unindent();
+	}
+	ImGui::Spacing();
+	if (ImGui::CollapsingHeader("Stat / Packed Debug"))
+	{
+		ImGui::Indent();
+		StatDebug::Render();
+		ImGui::Unindent();
+	}
 
 	ImGui::Spacing();
 	ImGui::SeparatorText("Tunables");
 	if (TunableService::IsLoaded())
 	{
 		ImGui::Text("Tunables loaded: %d entries", TunableService::TunableCount);
+		if (TunableService::LikelyStale)
+		{
+			ImGui::TextColored(ImVec4(1.0f, 0.35f, 0.35f, 1.0f),
+				"tunables.bin looks STALE for this build!");
+			ImGui::TextColored(ImVec4(1.0f, 0.35f, 0.35f, 1.0f),
+				"Regenerate it (see HOW_TO_GET_TUNABLES.txt) or these will silently fail.");
+		}
 		ImGui::Checkbox("RP Multiplier", &RPMultiplier::bEnable);
 		if (RPMultiplier::bEnable)
 		{

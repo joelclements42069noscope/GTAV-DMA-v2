@@ -46,6 +46,8 @@ bool DMA::Initialize()
 	ScanPatterns();
 
 	// Load tunable cache (for RP multiplier, no idle kick, etc.)
+	// Freshness is validated lazily (see RPMultiplier) once a session is live,
+	// since tunable globals aren't populated on the main menu.
 	TunableService::LoadFromCache("tunables.bin");
 
 	// Load heightmap for waypoint teleport Z lookup
@@ -85,6 +87,56 @@ bool DMA::ScanPatterns()
 	std::println("  VehiclePool:      {} ({:X})", Offsets::VehiclePool ? "OK" : "MISSING", Offsets::VehiclePool);
 	std::println("  ObjectPool:       {} ({:X})", Offsets::ObjectPool ? "OK" : "MISSING", Offsets::ObjectPool);
 	std::println("  BlipPtr:          {} ({:X})", Offsets::BlipPtr ? "OK" : "MISSING", Offsets::BlipPtr);
+
+	// Read the live game version string so the user can confirm the build the
+	// hard-coded script offsets were authored for (Enhanced b1158.13 as of the
+	// 2026-07-17 offset rebase). A mismatch is the usual cause of heist/casino
+	// script writes silently doing nothing.
+	if (Offsets::GameVersion)
+	{
+		auto looksPrintable = [](const char* b, DWORD n) {
+			return n > 0 && (uint8_t)b[0] >= 0x20 && (uint8_t)b[0] < 0x7F;
+		};
+		auto readStr = [&](uintptr_t addr, char* out, size_t cap) -> DWORD {
+			DWORD got = 0;
+			VMMDLL_MemReadEx(vmh, PID, addr, (BYTE*)out, (DWORD)(cap - 1), &got, VMMDLL_FLAG_NOCACHE);
+			out[cap - 1] = '\0';
+			return got;
+		};
+
+		uintptr_t verAddr = BaseAddress + Offsets::GameVersion;
+		char verBuf[64] = {};
+		DWORD read = readStr(verAddr, verBuf, sizeof(verBuf));
+
+		if (looksPrintable(verBuf, read))
+		{
+			std::println("  GameVersionStr:   \"{}\"", verBuf);
+		}
+		else
+		{
+			// The LEA target may hold a pointer to the string (const char**) on
+			// this build -- dereference once and try again.
+			uintptr_t strPtr = 0;
+			char verBuf2[64] = {};
+			DWORD read2 = 0;
+			if (DMA::Read(verAddr, strPtr) && strPtr > 0x10000)
+				read2 = readStr(strPtr, verBuf2, sizeof(verBuf2));
+
+			if (looksPrintable(verBuf2, read2))
+				std::println("  GameVersionStr:   \"{}\" (via ptr {:X})", verBuf2, strPtr);
+			else
+			{
+				// Neither worked -- dump raw bytes so the layout can be diagnosed.
+				// Most likely the buffer just isn't populated until you're in a session.
+				std::string hex;
+				for (int i = 0; i < 16; i++)
+					hex += std::format("{:02X} ", (uint8_t)verBuf[i]);
+				std::println("  GameVersionStr:   <empty at startup; may populate in-session> "
+					"raw@{:X}: {}", verAddr, hex);
+			}
+		}
+		std::println("  (script offsets authored for Enhanced b1158.13)");
+	}
 	std::println("============================");
 
 	// Feature dependency warnings
@@ -141,6 +193,9 @@ bool DMA::DMAThreadEntry()
 		RPMultiplier::OnDMAFrame();
 		NoIdleKick::OnDMAFrame();
 		WorldActions::OnDMAFrame();
+		CareerProgress::OnDMAFrame();
+		UnlockEverything::OnDMAFrame();
+		BusinessFeatures::OnDMAFrame();
 	}
 
 	DMA::Close();

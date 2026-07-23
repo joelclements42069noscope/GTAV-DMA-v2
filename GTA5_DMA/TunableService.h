@@ -38,7 +38,15 @@ public:
 	// Set a tunable by direct global index (bypass hash lookup)
 	static bool SetGlobalFloat(DWORD globalIndex, float value);
 
+	// Probe a few well-known tunables against live memory and warn if their
+	// mapped global indices no longer hold plausible values -- the tell-tale
+	// sign that tunables.bin was generated on a different game build and needs
+	// regenerating. Returns true if the data looks fresh.
+	static bool ValidateFreshness();
+
 	static inline int TunableCount = 0;
+	static inline uint32_t LoadedFileVersion = 0; // header timestamp of the loaded bin
+	static inline bool LikelyStale = false;       // set by ValidateFreshness()
 
 private:
 	static constexpr int TUNABLE_BASE_ADDRESS = 0x40001; // 262145

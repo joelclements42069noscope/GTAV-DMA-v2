@@ -26,9 +26,16 @@ public:
 	template<typename T>
 	T ReadLocal(uintptr_t remoteAddr) const
 	{
-		size_t offset = remoteAddr - m_Base;
-		if (offset + sizeof(T) > m_Buffer.size())
+		// Guard the underflow case first: a remoteAddr below the module base
+		// wraps to a huge size_t, and "offset + sizeof(T)" can then wrap back
+		// around to a small value and slip past a naive bounds check.
+		if (remoteAddr < m_Base)
 			return T{};
+
+		size_t offset = remoteAddr - m_Base;
+		if (offset > m_Buffer.size() || sizeof(T) > m_Buffer.size() - offset)
+			return T{};
+
 		return *reinterpret_cast<const T*>(&m_Buffer[offset]);
 	}
 

@@ -196,6 +196,11 @@
     <ClCompile Include="DailyObjectives.cpp" />
     <ClCompile Include="WorldActions.cpp" />
     <ClCompile Include="MissionComplete.cpp" />
+    <ClCompile Include="CareerProgress.cpp" />
+    <ClCompile Include="PackedStats.cpp" />
+    <ClCompile Include="StatDebug.cpp" />
+    <ClCompile Include="UnlockEverything.cpp" />
+    <ClCompile Include="BusinessFeatures.cpp" />
     <ClCompile Include="core\DMAModule.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
@@ -270,6 +275,11 @@
     <ClInclude Include="WorldActions.h" />
     <ClInclude Include="PoolIterator.h" />
     <ClInclude Include="MissionComplete.h" />
+    <ClInclude Include="CareerProgress.h" />
+    <ClInclude Include="PackedStats.h" />
+    <ClInclude Include="StatDebug.h" />
+    <ClInclude Include="UnlockEverything.h" />
+    <ClInclude Include="BusinessFeatures.h" />
     <ClInclude Include="core\Pattern.h" />
     <ClInclude Include="core\DMAScriptHelper.h" />
     <ClInclude Include="core\DMAModule.h" />

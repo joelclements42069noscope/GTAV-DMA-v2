@@ -57,6 +57,7 @@ bool TunableService::LoadFromCache(const std::string& filePath)
 	}
 
 	TunableCount = static_cast<int>(count);
+	LoadedFileVersion = header.m_FileVersion;
 	bLoaded = true;
 	std::println("[Tunables] Loaded {} tunables from cache (header: ver={}, fileVer={}, dataSize={})",
 		count, header.m_CacheVersion, header.m_FileVersion, header.m_DataSize);
@@ -171,4 +172,54 @@ std::vector<DWORD> TunableService::ScanForFloat(float targetValue, float toleran
 bool TunableService::SetGlobalFloat(DWORD globalIndex, float value)
 {
 	return DMA::SetGlobalFloat(globalIndex, value);
+}
+
+bool TunableService::ValidateFreshness()
+{
+	LikelyStale = false;
+	if (!bLoaded || !Offsets::ScriptGlobals)
+		return true; // nothing to validate against
+
+	// tunables.bin maps hash -> FULL global index. Those indices shift with
+	// every game title update, so a bin built on another build points its
+	// entries at the wrong globals. We can't know the build directly, but we
+	// can read a few well-known tunables and check they still hold plausible
+	// values. If none do, the bin is almost certainly stale.
+	int plausible = 0, probed = 0;
+
+	// XP_MULTIPLIER -- a float multiplier, realistically in (0, 10000].
+	if (DWORD gi = GetTunableGlobalIndex(0xB6E46AB9)) // JOAAT("XP_MULTIPLIER")
+	{
+		float f = 0.0f;
+		probed++;
+		if (DMA::GetGlobalValue(gi, f) && std::isfinite(f) && f > 0.0f && f <= 10000.0f)
+			plausible++;
+		std::println("[Tunables] Freshness probe XP_MULTIPLIER -> globalIdx={} value={:.3f}", gi, f);
+	}
+
+	// IDLEKICK_WARNING1 -- an int timeout in ms, realistically (0, 3_600_000].
+	if (DWORD gi = GetTunableGlobalIndex(0xB3A4D684)) // JOAAT("IDLEKICK_WARNING1")
+	{
+		int v = 0;
+		probed++;
+		if (DMA::GetGlobalValue(gi, v) && v > 0 && v <= 3'600'000)
+			plausible++;
+		std::println("[Tunables] Freshness probe IDLEKICK_WARNING1 -> globalIdx={} value={}", gi, v);
+	}
+
+	if (probed > 0 && plausible == 0)
+	{
+		LikelyStale = true;
+		std::println("[Tunables] *** WARNING: tunables.bin looks STALE for this game build ***");
+		std::println("[Tunables]   None of the probed tunables hold plausible values, which means");
+		std::println("[Tunables]   its hash->globalIndex map no longer matches the running game.");
+		std::println("[Tunables]   RP Multiplier / No Idle Kick / Free Appearance Change will not work.");
+		std::println("[Tunables]   Regenerate tunables.bin from a current YimMenu (see HOW_TO_GET_TUNABLES.txt).");
+	}
+	else
+	{
+		std::println("[Tunables] Freshness check: {}/{} probes plausible -- data looks OK.", plausible, probed);
+	}
+
+	return !LikelyStale;
 }

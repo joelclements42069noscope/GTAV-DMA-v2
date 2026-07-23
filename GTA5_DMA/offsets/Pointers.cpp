@@ -70,7 +70,7 @@ bool Pointers::Init(VMM_HANDLE vmh, DWORD pid)
 	// -------------------------------------------------------------------
 	constexpr auto scriptProgramsPtrn = Pattern<"48 C7 84 C8 D8 00 00 00 00 00 00 00">("ScriptPrograms");
 	scanner.Add(scriptProgramsPtrn, [](ResolvedPtr ptr) {
-		auto resolved = ptr.Add(0x13).Add(3).Rip();
+		auto resolved = ptr.Add(0x13).Add(3).Rip().Add(0xD8);
 		Offsets::ScriptPrograms = resolved.AsOffset();
 		std::println("[Pointers] ScriptPrograms offset: {:X}", Offsets::ScriptPrograms);
 	});

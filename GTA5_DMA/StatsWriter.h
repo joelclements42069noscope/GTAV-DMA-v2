@@ -30,6 +30,11 @@ public:
 	static bool SetStatInt(const std::string& statName, int value);
 	static int GetStatInt(const std::string& statName, int fallback = 0);
 
+	// Set float stat by name. NOTE: float obfuscation is UNVERIFIED -- this writes the
+	// raw IEEE-754 bits to +0x10 (no XOR). Verify with the Raw Stat Inspector if a float
+	// stat doesn't take. Handles MPX_ prefix.
+	static bool SetStatFloat(const std::string& statName, float value);
+
 	// Diagnostic: dump 32 bytes around a stat's sStatData for offset discovery
 	static void DiagnoseStat(const std::string& statName);
 
@@ -47,6 +52,21 @@ public:
 
 	// Public so HeistSetup can use it for verification reads
 	static uintptr_t FindStatDataPtr(uint32_t hash);
+
+	// --- Packed-stat support (used by PackedStats) ---------------------------
+	// Resolve a fully-qualified stat name (e.g. "MP0_CASINOPSTAT_BOOL3") to its
+	// sStatData*. Name is JOAAT-hashed case-insensitively. Does NOT apply MPX
+	// substitution -- pass the already-resolved MP0_/MP1_/MP_ name.
+	static uintptr_t FindStatDataPtrByName(const std::string& fullName);
+
+	// Read one 32-bit dword of a stat's value, XOR-decoded.
+	//   dwordOffset: 0 => value at +0x10 (low),  4 => value at +0x14 (high)
+	// The XOR key is the low 32 bits of the dword's own address (per-location).
+	static bool ReadStatDword(uintptr_t dataPtr, int dwordOffset, uint32_t& decodedOut);
+
+	// Masked read-modify-write of one 32-bit dword of a stat's value (XOR-encoded).
+	// Writes (current & ~mask) | (valueBits & mask). Returns false on read failure.
+	static bool WriteStatDwordMasked(uintptr_t dataPtr, int dwordOffset, uint32_t mask, uint32_t valueBits);
 
 private:
 	// sStatMap as stored in game memory (16 bytes each)

@@ -118,6 +118,48 @@ int StatsWriter::GetCharacterIndex()
 	return value;
 }
 
+uintptr_t StatsWriter::FindStatDataPtrByName(const std::string& fullName)
+{
+	if (!EnsureInitialized())
+		return 0;
+
+	// Joaat is case-insensitive (lowercases A-Z internally), so pass the name as-is.
+	uint32_t hash = DMAScript::Joaat(fullName.c_str());
+	return FindStatDataPtr(hash);
+}
+
+bool StatsWriter::ReadStatDword(uintptr_t dataPtr, int dwordOffset, uint32_t& decodedOut)
+{
+	if (!dataPtr)
+		return false;
+
+	uintptr_t addr = dataPtr + 0x10 + dwordOffset;
+	uint32_t raw = 0;
+	if (!DMA::Read(addr, raw))
+		return false;
+
+	uint32_t key = (uint32_t)(addr & 0xFFFFFFFF);
+	decodedOut = raw ^ key;
+	return true;
+}
+
+bool StatsWriter::WriteStatDwordMasked(uintptr_t dataPtr, int dwordOffset, uint32_t mask, uint32_t valueBits)
+{
+	if (!dataPtr)
+		return false;
+
+	uintptr_t addr = dataPtr + 0x10 + dwordOffset;
+	uint32_t raw = 0;
+	if (!DMA::Read(addr, raw))
+		return false;
+
+	uint32_t key = (uint32_t)(addr & 0xFFFFFFFF);
+	uint32_t decoded = raw ^ key;
+	decoded = (decoded & ~mask) | (valueBits & mask);
+	uint32_t encoded = decoded ^ key;
+	return DMA::Write(addr, encoded);
+}
+
 uintptr_t StatsWriter::FindStatDataPtr(uint32_t hash)
 {
 	if (CachedStats.empty())
@@ -184,6 +226,22 @@ bool StatsWriter::SetStatInt(const std::string& statName, int value)
 	}
 
 	return ok;
+}
+
+bool StatsWriter::SetStatFloat(const std::string& statName, float value)
+{
+	if (!EnsureInitialized())
+		return false;
+
+	std::string resolved = ResolveMPX(statName);
+	uint32_t hash = DMAScript::Joaat(resolved.c_str());
+
+	uintptr_t dataPtr = FindStatDataPtr(hash);
+	if (!dataPtr)
+		return false;
+
+	// Raw float bits at +0x10 (no XOR -- float obfuscation unverified).
+	return DMA::Write(dataPtr + 0x10, value);
 }
 
 int StatsWriter::GetStatInt(const std::string& statName, int fallback)

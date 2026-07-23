@@ -204,12 +204,13 @@ void HeistSetup::ApplyCayoSetup()
 		}
 	}
 
-	// Force planning board to refresh by writing script local 1570 = 2
+	// Force planning board to refresh by writing script local 1580 = 2
 	// in heist_island_planning (this is what YimMenu does after stat writes)
+	// b1158.13: was 1570 pre-1.73.
 	bool boardRefreshed = DMAScript::WriteScriptLocal<int>(
-		DMAScript::Joaat("heist_island_planning"), 1570, 2);
+		DMAScript::Joaat("heist_island_planning"), 1580, 2);
 	if (boardRefreshed)
-		std::println("[HeistSetup] Planning board refresh triggered (heist_island_planning local 1570 = 2)");
+		std::println("[HeistSetup] Planning board refresh triggered (heist_island_planning local 1580 = 2)");
 	else
 		std::println("[HeistSetup] Could not refresh planning board (heist_island_planning not running - are you at the planning screen?)");
 
@@ -232,8 +233,9 @@ static constexpr uint32_t IH_TARGET_HASHES[] = {
 	DMAScript::Joaat("IH_PRIMARY_TARGET_VALUE_SAPPHIRE_PANTHER_STATUE") // target 5
 };
 
-// ScriptLocal(thread, 59705).At(1376).At(53) = 59705 + 1376 + 53 = 61134
-static constexpr size_t CAYO_SECONDARY_TAKE_LOCAL = 59705 + 1376 + 53;
+// ScriptLocal(thread, 59986).At(1376).At(53) = 59986 + 1376 + 53 = 61415
+// b1158.13: base was 59705 pre-1.73.
+static constexpr size_t CAYO_SECONDARY_TAKE_LOCAL = 59986 + 1376 + 53;
 
 void HeistSetup::ApplyCayoTakeOverride()
 {
@@ -260,6 +262,517 @@ void HeistSetup::ApplyCayoTakeOverride()
 }
 
 // ========================================================
+// Kortz Center Heist (K26) -- instant setup via named stats
+// Bit maps (from newstuff.txt / the community setup script):
+//   MPX_K26_GENERAL_BS  bits 5-8  = Guard Routes / Glass Cutter / Power Drills / EMP Charges
+//   MPX_K26_ROBBERY_PROG bits 0-15 = the 16 prep-work items (see labels below)
+//   MPX_K26_SCOPING_BS  = -1 -> all secondary targets scoped
+//   MPX_K26_POI_BS      = -1 -> all points of interest scoped (unlocks optional preps)
+//   MPX_K26_HEIST_TARGET = 0..26 (primary painting)
+//   MPX_K26_GENERAL_BS2 = -1 (updates itself off the planning board)
+//   MPX_K26_TARGETS_OWNED_BS = -1 -> all 26 mansion paintings unlocked
+// Approach: start each bitset at -1 (everything set) and clear the boxes the
+// user left unchecked -- matches the community KortzCenterSetup() exactly.
+// ========================================================
+
+static const char* KORTZ_TARGET_LABELS[27] = {
+	"La Derniere Debauche", "Hare Oneself Think", "The Downfall of Rome", "Brother Brother",
+	"A Cast of Characters", "Gone To Seed", "True Love", "Breathless", "Consumato",
+	"I Hear Voices", "Winter, Nowhere in Particular", "The Girl With the Pearl Necklace",
+	"Chat on Fruit", "Pumpkin", "Twindifference", "Stacks Study V", "I, Fruit",
+	"To Beat About the Bush", "In Excess of Success", "Juiced", "A Winding Road Home",
+	"Teckels", "Trust", "Until Death", "What Are Melons?", "The Outcome of Endeavour",
+	"Mi O Melee"
+};
+
+// Prep-work labels for MPX_K26_ROBBERY_PROG bits 0-15.
+static const char* KORTZ_PREP_LABELS[16] = {
+	"Scope Out Kortz Center",  // 0
+	"Alpha Mail Disguise",     // 1
+	"Hazmat Suit",             // 2
+	"Staff Key Card",          // 3
+	"Tactical Equipment",      // 4
+	"Hacking Device",          // 5
+	"Access Code",             // 6
+	"Unmarked Weapons",        // 7
+	"Armored Caracara",        // 8
+	"Annihilator Stealth",     // 9
+	"Manchez",                 // 10
+	"EMP Charges (Prep)",      // 11
+	"Guard Shipments",         // 12
+	"Guard Routes (Prep)",     // 13
+	"Glass Cutter (Prep)",     // 14
+	"Power Drills (Prep)",     // 15
+};
+
+void HeistSetup::ApplyKortzSetup()
+{
+	// GENERAL_BS: start at -1 (all bits set) and clear everything not selected.
+	//
+	// CRITICAL: the loadout (bits 9-11) and Manchez colour (bits 17-20) are
+	// MUTUALLY EXCLUSIVE. Leaving -1 in place sets all three loadouts and all
+	// four bike colours at once, which is invalid state and makes the planning
+	// board refuse to set the heist up. Every exclusive bit must be cleared
+	// except the one selected.
+	// Bit math is done unsigned (bit 31 would be UB on a signed int).
+	uint32_t generalBits = 0xFFFFFFFFu;
+	auto clearBit = [&](int b) { generalBits &= ~(1u << b); };
+
+	// Purchases (bits 5-8).
+	if (!KortzGuardRoutes) clearBit(5);
+	if (!KortzGlassCutter) clearBit(6);
+	if (!KortzPowerDrills) clearBit(7);
+	if (!KortzEmpCharges)  clearBit(8);
+
+	// Loadout (9=Street, 10=Security, 11=Military) -- keep only the selected one.
+	if (KortzLoadoutType != 1) clearBit(9);
+	if (KortzLoadoutType != 2) clearBit(10);
+	if (KortzLoadoutType != 3) clearBit(11);
+
+	// Manchez colour (17=Red, 18=Blue, 19=Green, 20=Yellow) -- only when the
+	// Manchez getaway prep (ROBBERY_PROG bit 10) is actually enabled.
+	const bool manchez = KortzPrep[10];
+	for (int c = 0; c < 4; c++)
+		if (!(manchez && KortzManchezColor == c)) clearBit(17 + c);
+
+	// Misc flags.
+	if (!KortzManholeKey) clearBit(27);
+	if (!KortzHardMode)   clearBit(28);
+	if (!KortzWeakGuards) clearBit(31);
+
+	// ROBBERY_PROG: start at -1, clear unchecked prep bits (0-15).
+	uint32_t robberyProg = 0xFFFFFFFFu;
+	for (int i = 0; i < 16; i++)
+		if (!KortzPrep[i]) robberyProg &= ~(1u << i);
+
+	int scopingBs = KortzScopeSecondary ? -1 : 0;
+	int poiBs     = KortzScopePoi ? -1 : 0;
+	int target    = (KortzPrimaryTarget >= 0 && KortzPrimaryTarget <= 26) ? KortzPrimaryTarget : 0;
+
+	int ok = 0, total = 0;
+	auto setStat = [&](const char* name, int val) {
+		total++;
+		if (StatsWriter::SetStatInt(name, val)) ok++;
+	};
+
+	setStat("MPX_K26_GENERAL_BS", (int)generalBits);
+	setStat("MPX_K26_GENERAL_BS2", -1);
+	setStat("MPX_K26_ROBBERY_PROG", (int)robberyProg);
+	setStat("MPX_K26_HEIST_TARGET", target);
+	setStat("MPX_K26_SCOPING_BS", scopingBs);
+	setStat("MPX_K26_POI_BS", poiBs);
+
+	std::println("[HeistSetup] Kortz Center: {}/{} stats written (target={} '{}', GENERAL_BS=0x{:08X}, ROBBERY_PROG=0x{:08X})",
+		ok, total, target, KORTZ_TARGET_LABELS[target], (uint32_t)generalBits, (uint32_t)robberyProg);
+
+	StatusText = (ok == total) ? "Kortz setup applied!" : "Kortz setup: some stats failed (check log)";
+}
+
+void HeistSetup::UnlockKortzPaintings()
+{
+	// All 26 mansion paintings owned (bits 1..26). -1 sets every bit.
+	bool ok = StatsWriter::SetStatInt("MPX_K26_TARGETS_OWNED_BS", -1);
+	std::println("[HeistSetup] Kortz paintings unlock: {}", ok ? "OK" : "failed");
+	StatusText = ok ? "All Kortz paintings unlocked!" : "Paintings unlock failed (check log)";
+}
+
+// ========================================================
+// Kortz extras -- documented K26 stats the setup itself doesn't touch.
+// All named/hash-based, so version-independent.
+// ========================================================
+
+void HeistSetup::KortzRemoveCooldown()
+{
+	// K26_HEIST_COOLDOWN      = "Tracking the kortz heist cooldown time"
+	// K26_HEIST_COOLDOWN_HARD = "Tracking time in which setting up the kortz heist sets hard mode"
+	int ok = 0;
+	if (StatsWriter::SetStatInt("MPX_K26_HEIST_COOLDOWN", 0)) ok++;
+	if (StatsWriter::SetStatInt("MPX_K26_HEIST_COOLDOWN_HARD", 0)) ok++;
+	std::println("[Kortz] Remove cooldown: {}/2 stats written", ok);
+	StatusText = (ok == 2) ? "Kortz cooldown cleared!" : "Cooldown: partial write (check log)";
+}
+
+void HeistSetup::KortzWeeklyBoost()
+{
+	// "Bitset for tracking weekly boosted payouts" -- the thread reports writing
+	// -1 enables every boost. NOTE: this stat is ServerAuthoritative, so R* may
+	// correct it back; treat it as best-effort.
+	bool ok = StatsWriter::SetStatInt("MPX_WEEKLY_BOOST_BS", -1);
+	std::println("[Kortz] Weekly boosted payouts: {}", ok ? "OK" : "failed");
+	StatusText = ok ? "Weekly boosted payouts set (server may revert)" : "Weekly boost write failed";
+}
+
+void HeistSetup::KortzBuyerRequests()
+{
+	// "Tracking bitset for kortz heist loot thats part of buyer request bonus"
+	bool ok = StatsWriter::SetStatInt("MPX_K26_BUYREQ_BS", -1);
+	std::println("[Kortz] Buyer requests: {}", ok ? "OK" : "failed");
+	StatusText = ok ? "All buyer requests satisfied!" : "Buyer request write failed";
+}
+
+void HeistSetup::KortzMaxApproachPlays()
+{
+	// Per-approach completion counters. Feeds the approach-variety awards
+	// (Making an Entrance / all 4 entry points) and career-progress objectives.
+	static const char* PLAY_STATS[] = {
+		"MPX_K26_PLAYS_ARENA_CAR",       "MPX_K26_PLAYS_HELICOPTER",
+		"MPX_K26_PLAYS_OFF_ROAD",        "MPX_K26_PLAYS_ENTRY",
+		"MPX_K26_PLAYS_INSIDE_STEALTH",  "MPX_K26_PLAYS_INSIDE_AGGRO",
+		"MPX_K26_PLAYS_VAULT_STEALTH",   "MPX_K26_PLAYS_VAULT_AGGRO",
+		"MPX_K26_PLAYS_GETAWAY_STEALTH", "MPX_K26_PLAYS_GETAWAY_AGGRO",
+	};
+
+	int ok = 0;
+	for (const char* s : PLAY_STATS)
+		if (StatsWriter::SetStatInt(s, 20)) ok++;
+
+	std::println("[Kortz] Approach play counts: {}/{} stats written", ok, (int)std::size(PLAY_STATS));
+	StatusText = (ok == (int)std::size(PLAY_STATS))
+		? "All approach play counts maxed!" : "Approach plays: partial write (check log)";
+}
+
+// ========================================================
+// Kortz advanced -- the remaining K26 stats. Their value semantics are NOT
+// documented anywhere, so instead of hard-coding guesses these are exposed as
+// live-read + explicit-write fields: read what the game currently holds, try a
+// value, see what changes. The Comment= text from the stat definitions is kept
+// as the tooltip so the intent of each is visible.
+// ========================================================
+
+struct KortzAdvStat { const char* name; const char* label; const char* hint; };
+static const KortzAdvStat KORTZ_ADV_STATS[] = {
+	{ "MPX_K26_PRIMARY_OVERRIDE_ID", "Primary Override ID",
+	  "Override ID for whenever live ops run a promo for a specific target.\n"
+	  "Likely the same 0-26 painting index as HEIST_TARGET, but unconfirmed --\n"
+	  "use 'Sync to selected target' to try the current Primary Target." },
+	{ "MPX_K26_HEIST_SEED", "Heist Seed",
+	  "The seed for grabbing secondary loot value on the Kortz Center Heist.\n"
+	  "Seed -> value mapping is unknown; vary it and re-scope to compare takes." },
+	{ "MPX_K26_MANHOLE_KEY_LOC", "Manhole Key Location",
+	  "Location of the manhole key. Small index; read it during a real setup\n"
+	  "to learn the valid range." },
+	{ "MPX_K26_PRIMARY_LOOP", "Primary Loop",
+	  "Looping stat for the rotating weekly targets." },
+	{ "MPX_K26_WEEK_ID", "Week ID",
+	  "Syncs to a tunable for week ID, so weekly changes to heist data get\n"
+	  "processed. Changing this may re-roll the weekly target rotation." },
+	{ "MPX_K26_STOLENLAST_BS", "Stolen Last (bitset)",
+	  "Tracking bitset for the loot stolen in the most recent play.\n"
+	  "-1 sets every bit (as with the other _BS stats)." },
+	{ "MPX_K26_SESSIONID_MAC", "Session ID (MAC)",
+	  "Telemetry only -- included for completeness. Changing it should have\n"
+	  "no gameplay effect." },
+	{ "MPX_K26_SESSIONID_POS", "Session ID (POS)",
+	  "Telemetry only -- included for completeness." },
+	{ "MPX_K26_GENERAL_BS2", "General BS2",
+	  "Updates itself when using the Planning Board. Reported: after paying for\n"
+	  "the Hard Mode setup, bit 3 (value 8) got cleared. The setup writes -1." },
+};
+
+void HeistSetup::KortzReadAdvanced()
+{
+	static_assert(std::size(KORTZ_ADV_STATS) == KORTZ_ADV_COUNT,
+		"KORTZ_ADV_STATS must stay in sync with KORTZ_ADV_COUNT");
+
+	for (int i = 0; i < KORTZ_ADV_COUNT; i++)
+		KortzAdvLive[i] = StatsWriter::GetStatInt(KORTZ_ADV_STATS[i].name, 0);
+	KortzAdvHaveRead = true;
+
+	std::println("[Kortz] Advanced stat read-back:");
+	for (int i = 0; i < KORTZ_ADV_COUNT; i++)
+		std::println("   {:<30} = {} (0x{:08X})",
+			KORTZ_ADV_STATS[i].name, KortzAdvLive[i], (uint32_t)KortzAdvLive[i]);
+
+	StatusText = "Advanced stats read -- see console for the full dump";
+}
+
+void HeistSetup::RenderKortzAdvanced()
+{
+	ImGui::TextWrapped("These K26 stats have undocumented value semantics. Read the live value "
+		"first, then write to experiment. Console logs every read.");
+
+	if (ImGui::Button("Read Live Values##kortzadv"))
+		KortzReadAdvanced();
+	ImGui::SameLine();
+	if (ImGui::Button("Write All##kortzadv"))
+	{
+		int ok = 0;
+		for (int i = 0; i < KORTZ_ADV_COUNT; i++)
+			if (StatsWriter::SetStatInt(KORTZ_ADV_STATS[i].name, KortzAdvWrite[i])) ok++;
+		std::println("[Kortz] Advanced write-all: {}/{} stats written", ok, KORTZ_ADV_COUNT);
+		StatusText = (ok == KORTZ_ADV_COUNT) ? "All advanced stats written!"
+		                                     : "Advanced write: partial (check log)";
+	}
+
+	ImGui::Separator();
+
+	for (int i = 0; i < KORTZ_ADV_COUNT; i++)
+	{
+		ImGui::PushID(i);
+
+		ImGui::Text("%s", KORTZ_ADV_STATS[i].label);
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("%s\n\n%s", KORTZ_ADV_STATS[i].name, KORTZ_ADV_STATS[i].hint);
+
+		ImGui::SameLine(210.f);
+		if (KortzAdvHaveRead)
+			ImGui::TextColored(ImVec4(0.4f, 1.f, 0.6f, 1.f), "live: %d", KortzAdvLive[i]);
+		else
+			ImGui::TextDisabled("live: ?");
+
+		ImGui::SameLine(330.f);
+		ImGui::SetNextItemWidth(120.f);
+		ImGui::InputInt("##val", &KortzAdvWrite[i]);
+
+		ImGui::SameLine();
+		if (ImGui::Button("Write"))
+		{
+			bool ok = StatsWriter::SetStatInt(KORTZ_ADV_STATS[i].name, KortzAdvWrite[i]);
+			std::println("[Kortz] {} = {} -> {}", KORTZ_ADV_STATS[i].name,
+				KortzAdvWrite[i], ok ? "OK" : "FAILED");
+			StatusText = ok ? "Advanced stat written" : "Advanced stat write failed";
+			if (ok) { KortzAdvLive[i] = KortzAdvWrite[i]; KortzAdvHaveRead = true; }
+		}
+
+		// The override ID is most plausibly the same 0-26 index as the primary
+		// target, so offer a one-click sync rather than making the user retype it.
+		if (i == 0)
+		{
+			ImGui::SameLine();
+			if (ImGui::SmallButton("Sync to selected target"))
+				KortzAdvWrite[0] = KortzPrimaryTarget;
+		}
+
+		ImGui::PopID();
+	}
+}
+
+// ========================================================
+// Kortz Center Cracker -- in-heist actions (fm_mission_controller_v3)
+// Script locals from the community "Kortz Center Cracker" (ImagineNothing).
+// .At(i, size) flattens to base + 1 + i*size, matching ScriptLocal semantics.
+//
+// NOTE: three of these (access code, take primary/secondary target) pair the
+// memory write with a PAD.SET_CONTROL_VALUE_NEXT_FRAME button press in the Lua.
+// DMA cannot call natives, so we do the memory half and you press the interact
+// key yourself -- the tooltips say so.
+// ========================================================
+
+static constexpr uint32_t KORTZ_MC_HASH = DMAScript::Joaat("fm_mission_controller_v3");
+
+void HeistSetup::KortzSkipDataCrack()
+{
+	// for b = 0..7: ScriptLocal(1388).At(b, 4) = 1388 + 1 + b*4  -> 1
+	auto thread = DMAScript::FindScriptThread(KORTZ_MC_HASH);
+	if (!thread) { StatusText = "Failed (Kortz heist not running?)"; return; }
+	auto stack = DMAScript::GetScriptStack(thread);
+	if (!stack) { StatusText = "Failed (no stack)"; return; }
+
+	int ok = 0;
+	for (int b = 0; b < 8; b++)
+		if (DMAScript::WriteScriptLocal<int>(stack, 1388 + 1 + b * 4, 1)) ok++;
+
+	std::println("[Kortz] Skip Data Crack: {}/8 nodes written", ok);
+	StatusText = (ok == 8) ? "Data Crack skipped!" : "Data Crack: partial write (check log)";
+}
+
+void HeistSetup::KortzSkipFingerprint()
+{
+	bool ok = DMAScript::WriteScriptLocal<int>(KORTZ_MC_HASH, 26866, 5);
+	StatusText = ok ? "Fingerprint hacking skipped!" : "Failed (Kortz heist not running?)";
+}
+
+void HeistSetup::KortzEnterAccessCode()
+{
+	// for i = 0..2: ScriptLocal(32820).At(i, 2) = 32820 + 1 + i*2 -> 0
+	auto thread = DMAScript::FindScriptThread(KORTZ_MC_HASH);
+	if (!thread) { StatusText = "Failed (Kortz heist not running?)"; return; }
+	auto stack = DMAScript::GetScriptStack(thread);
+	if (!stack) { StatusText = "Failed (no stack)"; return; }
+
+	int ok = 0;
+	for (int i = 0; i < 3; i++)
+		if (DMAScript::WriteScriptLocal<int>(stack, 32820 + 1 + i * 2, 0)) ok++;
+
+	std::println("[Kortz] Access code: {}/3 digits written", ok);
+	StatusText = (ok == 3) ? "Access code entered -- press the interact key!" : "Access code: partial write";
+}
+
+void HeistSetup::KortzDisableLasers()
+{
+	bool a = DMAScript::WriteScriptLocal<int>(KORTZ_MC_HASH, 70416, 4294784);
+	bool b = DMA::SetGlobalInt(1935711, 1);
+	std::println("[Kortz] Disable lasers: local={} global={}", a, b);
+	StatusText = a ? "Laser grid disabled (also clears forced stealth)" : "Failed (Kortz heist not running?)";
+}
+
+void HeistSetup::KortzSkipVaultHacking()
+{
+	bool ok = DMAScript::WriteScriptLocal<int>(KORTZ_MC_HASH, 27914, 5);
+	StatusText = ok ? "Vault door (signal nodes) skipped!" : "Failed (Kortz heist not running?)";
+}
+
+void HeistSetup::KortzTakePrimaryTarget()
+{
+	// ScriptLocal(29355 + 11) = 29366: write 15 then 17 (state machine step).
+	auto thread = DMAScript::FindScriptThread(KORTZ_MC_HASH);
+	if (!thread) { StatusText = "Failed (Kortz heist not running?)"; return; }
+	auto stack = DMAScript::GetScriptStack(thread);
+	if (!stack) { StatusText = "Failed (no stack)"; return; }
+
+	DMAScript::WriteScriptLocal<int>(stack, 29366, 15);
+	bool ok = DMAScript::WriteScriptLocal<int>(stack, 29366, 17);
+	StatusText = ok ? "Primary target taken -- press the interact key!" : "Primary target: write failed";
+}
+
+void HeistSetup::KortzTakeSecondaryTarget()
+{
+	bool ok = DMAScript::WriteScriptLocal<int>(KORTZ_MC_HASH, 29366, 3);
+	StatusText = ok ? "Secondary target taken -- press the interact key!" : "Failed (Kortz heist not running?)";
+}
+
+void HeistSetup::KortzCutGlass()
+{
+	// ScriptLocal(32855 + 3).At(4, 13) = 32858 + 1 + 4*13 = 32911 -> 100.0f
+	bool ok = DMAScript::WriteScriptLocal<float>(KORTZ_MC_HASH, 32858 + 1 + 4 * 13, 100.0f);
+	StatusText = ok ? "Display case glass cut!" : "Failed (Kortz heist not running?)";
+}
+
+void HeistSetup::KortzSoloSecondaryTargets()
+{
+	// Resets interaction & loot flags for the Level 2 exhibit horizontal glass
+	// cases (i = 5, 6, 7) and artwork/wall displays (i = 20, 21) so they can be
+	// looted solo. base = 4980736 + 1 + 29174 + i*333; clear base+68 and base+143.
+	constexpr DWORD BASE = 4980736 + 1 + 29174; // = 5009911
+	constexpr int INDICES[] = { 5, 6, 7, 20, 21 };
+
+	int ok = 0;
+	for (int i : INDICES)
+	{
+		DWORD base = BASE + (DWORD)i * 333;
+		if (DMA::SetGlobalInt(base + 68, 0)) ok++;
+		if (DMA::SetGlobalInt(base + 143, 0)) ok++;
+	}
+
+	std::println("[Kortz] Solo secondary targets: {}/10 globals written", ok);
+	StatusText = (ok == 10) ? "Solo secondary targets enabled!" : "Solo targets: partial write (check log)";
+}
+
+void HeistSetup::RenderKortzActions()
+{
+	ImGui::TextDisabled("Use these during the Kortz Center finale");
+
+	if (ImGui::Button("Skip Data Crack##kortz"))        KortzSkipDataCrack();
+	ImGui::SameLine();
+	if (ImGui::Button("Skip Fingerprint##kortz"))       KortzSkipFingerprint();
+
+	if (ImGui::Button("Skip Vault Door##kortz"))        KortzSkipVaultHacking();
+	if (ImGui::IsItemHovered()) ImGui::SetTooltip("Skips the Signal Nodes hack");
+	ImGui::SameLine();
+	if (ImGui::Button("Disable Lasers##kortz"))         KortzDisableLasers();
+	if (ImGui::IsItemHovered()) ImGui::SetTooltip("Disables the laser grid and the forced stealth state");
+
+	if (ImGui::Button("Enter Access Code##kortz"))      KortzEnterAccessCode();
+	if (ImGui::IsItemHovered()) ImGui::SetTooltip("Writes the code -- then press the interact key yourself\n(DMA cannot press buttons for you)");
+	ImGui::SameLine();
+	if (ImGui::Button("Cut Glass##kortz"))              KortzCutGlass();
+
+	if (ImGui::Button("Take Primary Target##kortz"))    KortzTakePrimaryTarget();
+	if (ImGui::IsItemHovered()) ImGui::SetTooltip("Be at the painting and start the steal first,\nthen press the interact key after clicking this");
+	ImGui::SameLine();
+	if (ImGui::Button("Take Secondary Target##kortz"))  KortzTakeSecondaryTarget();
+
+	ImGui::Spacing();
+	if (ImGui::Button("Enable Solo Secondary Targets##kortz")) KortzSoloSecondaryTargets();
+	if (ImGui::IsItemHovered()) ImGui::SetTooltip("Resets loot flags on the Level 2 exhibit cases & artworks\n(i = 5, 6, 7, 20, 21) so they can be taken solo");
+}
+
+void HeistSetup::RenderKortzSetup()
+{
+	ImGui::Combo("Primary Target##kortz", &KortzPrimaryTarget, KORTZ_TARGET_LABELS, 27);
+
+	// Loadout is mutually exclusive -- selecting one clears the other two bits.
+	const char* loadoutItems = "None\0Street\0Security\0Military\0";
+	ImGui::Combo("Loadout##kortz", &KortzLoadoutType, loadoutItems);
+	ImGui::TextDisabled("Needs the Unmarked Weapons prep; Security = weak guards + security guns");
+
+	if (ImGui::TreeNode("General Purchases##kortz"))
+	{
+		ImGui::Checkbox("Guard Routes##kortz", &KortzGuardRoutes);
+		ImGui::Checkbox("Glass Cutter##kortz", &KortzGlassCutter);
+		ImGui::Checkbox("Power Drills##kortz", &KortzPowerDrills);
+		ImGui::Checkbox("EMP Charges##kortz", &KortzEmpCharges);
+		ImGui::TreePop();
+	}
+
+	if (ImGui::TreeNode("Prep Work##kortz"))
+	{
+		if (ImGui::SmallButton("All##kortzprep"))  for (auto& b : KortzPrep) b = true;
+		ImGui::SameLine();
+		if (ImGui::SmallButton("None##kortzprep")) for (auto& b : KortzPrep) b = false;
+		for (int i = 0; i < 16; i++)
+		{
+			ImGui::Checkbox(KORTZ_PREP_LABELS[i], &KortzPrep[i]);
+			// The Manchez getaway bike also needs a colour bit in GENERAL_BS,
+			// otherwise it never shows up in the finale.
+			if (i == 10 && KortzPrep[10])
+			{
+				ImGui::Indent();
+				const char* colorItems = "Red\0Blue\0Green\0Yellow\0";
+				ImGui::Combo("Manchez Colour##kortz", &KortzManchezColor, colorItems);
+				ImGui::Unindent();
+			}
+		}
+		ImGui::TreePop();
+	}
+
+	ImGui::Checkbox("Manhole Key##kortz", &KortzManholeKey);
+	if (ImGui::IsItemHovered()) ImGui::SetTooltip("Required for the sewer entrance");
+	ImGui::SameLine();
+	ImGui::Checkbox("Hard Mode##kortz", &KortzHardMode);
+	ImGui::SameLine();
+	ImGui::Checkbox("Weak Guards##kortz", &KortzWeakGuards);
+
+	ImGui::Checkbox("Scope Secondary Targets##kortz", &KortzScopeSecondary);
+	ImGui::Checkbox("Scope Points of Interest##kortz", &KortzScopePoi);
+	ImGui::TextDisabled("POI must be scoped for Guard Routes / Glass Cutter / EMP to appear as preps");
+
+	if (ImGui::Button("Apply Kortz Setup"))
+		ApplyKortzSetup();
+	ImGui::SameLine();
+	if (ImGui::Button("Unlock All Paintings##kortz"))
+		UnlockKortzPaintings();
+
+	ImGui::Spacing();
+	ImGui::SeparatorText("Extras");
+	if (ImGui::Button("Remove Cooldown##kortz"))
+		KortzRemoveCooldown();
+	if (ImGui::IsItemHovered()) ImGui::SetTooltip("Clears the heist cooldown so you can replay immediately");
+	ImGui::SameLine();
+	if (ImGui::Button("Complete Buyer Requests##kortz"))
+		KortzBuyerRequests();
+	if (ImGui::IsItemHovered()) ImGui::SetTooltip("Marks all buyer-request bonus loot as satisfied");
+
+	if (ImGui::Button("Weekly Boosted Payouts##kortz"))
+		KortzWeeklyBoost();
+	if (ImGui::IsItemHovered()) ImGui::SetTooltip("MPX_WEEKLY_BOOST_BS = -1.\nServer-authoritative, so R* may revert it.");
+	ImGui::SameLine();
+	if (ImGui::Button("Max Approach Plays##kortz"))
+		KortzMaxApproachPlays();
+	if (ImGui::IsItemHovered()) ImGui::SetTooltip("Sets all 10 per-approach completion counters\n(feeds the entry-point / approach-variety awards)");
+
+	if (ImGui::TreeNode("Advanced (undocumented stats)##kortz"))
+	{
+		RenderKortzAdvanced();
+		ImGui::TreePop();
+	}
+
+	ImGui::Spacing();
+	ImGui::SeparatorText("In-Heist Actions (Kortz Center Cracker)");
+	RenderKortzActions();
+}
+
+// ========================================================
 // In-Heist Actions (skip drilling, hacking, etc.)
 // These write to script locals in the active mission controller.
 // ========================================================
@@ -269,9 +782,10 @@ static constexpr uint32_t CAYO_MC_HASH = DMAScript::Joaat("fm_mission_controller
 // Casino Heist mission controller: fm_mission_controller
 static constexpr uint32_t CASINO_MC_HASH = DMAScript::Joaat("fm_mission_controller");
 
+// b1158.13 in-heist locals -- all re-based from the pre-1.73 values noted inline.
 void HeistSetup::SkipCayoHacking()
 {
-	if (DMAScript::WriteScriptLocal<int>(CAYO_MC_HASH, 26486, 5))
+	if (DMAScript::WriteScriptLocal<int>(CAYO_MC_HASH, 26619, 5)) // was 26486
 		StatusText = "Cayo hacking skipped!";
 	else
 		StatusText = "Failed (not in Cayo heist?)";
@@ -279,7 +793,7 @@ void HeistSetup::SkipCayoHacking()
 
 void HeistSetup::SkipCayoSewer()
 {
-	if (DMAScript::WriteScriptLocal<int>(CAYO_MC_HASH, 31349, 6))
+	if (DMAScript::WriteScriptLocal<int>(CAYO_MC_HASH, 31511, 6)) // was 31349
 		StatusText = "Cayo sewer cut skipped!";
 	else
 		StatusText = "Failed (not in Cayo heist?)";
@@ -287,7 +801,7 @@ void HeistSetup::SkipCayoSewer()
 
 void HeistSetup::SkipCayoGlass()
 {
-	if (DMAScript::WriteScriptLocal<float>(CAYO_MC_HASH, 32589 + 3, 100.0f))
+	if (DMAScript::WriteScriptLocal<float>(CAYO_MC_HASH, 32751 + 3, 100.0f)) // base was 32589
 		StatusText = "Cayo glass cut skipped!";
 	else
 		StatusText = "Failed (not in Cayo heist?)";
@@ -295,22 +809,23 @@ void HeistSetup::SkipCayoGlass()
 
 void HeistSetup::SkipCasinoHacking()
 {
-	bool ok = DMAScript::WriteScriptLocal<int>(CASINO_MC_HASH, 54042, 5);
-	ok = DMAScript::WriteScriptLocal<int>(CASINO_MC_HASH, 55108, 5) || ok;
+	bool ok = DMAScript::WriteScriptLocal<int>(CASINO_MC_HASH, 55028, 5);       // was 54042
+	ok = DMAScript::WriteScriptLocal<int>(CASINO_MC_HASH, 56098, 5) || ok;      // was 55108
 	StatusText = ok ? "Casino hacking skipped!" : "Failed (not in Casino heist?)";
 }
 
 void HeistSetup::SkipCasinoDrilling()
 {
-	// Read the target value from local 10551+37, write to local 10551+7
+	// Read the target value from local 10567+37, write to local 10567+7
+	// b1158.13: base was 10551 pre-1.73.
 	auto thread = DMAScript::FindScriptThread(CASINO_MC_HASH);
 	if (!thread) { StatusText = "Failed (not in Casino heist?)"; return; }
 	auto stack = DMAScript::GetScriptStack(thread);
 	if (!stack) { StatusText = "Failed (no stack)"; return; }
 
 	int targetVal = 0;
-	DMAScript::ReadScriptLocal<int>(stack, 10551 + 37, targetVal);
-	DMAScript::WriteScriptLocal<int>(stack, 10551 + 7, targetVal);
+	DMAScript::ReadScriptLocal<int>(stack, 10567 + 37, targetVal);
+	DMAScript::WriteScriptLocal<int>(stack, 10567 + 7, targetVal);
 	StatusText = "Casino drilling skipped!";
 }
 
@@ -414,6 +929,13 @@ void HeistSetup::Render()
 	{
 		ImGui::Indent();
 		RenderCayoSetup();
+		ImGui::Unindent();
+	}
+
+	if (ImGui::CollapsingHeader("Kortz Center Setup"))
+	{
+		ImGui::Indent();
+		RenderKortzSetup();
 		ImGui::Unindent();
 	}
 

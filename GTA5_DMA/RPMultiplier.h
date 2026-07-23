@@ -14,4 +14,5 @@ private:
 	static constexpr float XP_CLOUD_VALUE = 75.0f;              // R* cloud default for XP_MULTIPLIER
 	static inline DWORD ResolvedGlobalIdx = 0;                  // Found via scan if hash lookup fails
 	static inline bool ScanAttempted = false;
+	static inline bool FreshnessChecked = false;               // one-shot tunables.bin staleness probe
 };

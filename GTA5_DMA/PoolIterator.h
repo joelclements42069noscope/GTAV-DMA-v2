@@ -32,14 +32,23 @@ namespace PoolIterator
 	static_assert(offsetof(fwBasePool, m_Size) == 0x18);
 
 	// fwVehiclePool structure (different layout, not encrypted)
+	// NOTE: rage::fwVehiclePool is polymorphic (virtual dtor), so the first 8
+	// bytes are the vtable pointer and every field is shifted accordingly.
+	// Layout mirrors YimMenuV2 src/types/vehicle/fwVehiclePool.hpp.
 	struct fwVehiclePool
 	{
-		uintptr_t m_PoolAddress;  // 0x00 - array of pointers
-		uint32_t m_Size;          // 0x08 - pool capacity
-		uint32_t pad;             // 0x0C
-		uintptr_t m_BitArray;     // 0x10 - validity bitfield pointer
-		uint32_t m_ItemCount;     // 0x18 - current count
+		char pad_0000[8];         // 0x00 - vtable
+		uintptr_t m_PoolAddress;  // 0x08 - array of pointers
+		uint32_t m_Size;          // 0x10 - pool capacity
+		char pad_0014[36];        // 0x14
+		uintptr_t m_BitArray;     // 0x38 - validity bitfield pointer
+		char pad_0040[40];        // 0x40
+		uint32_t m_ItemCount;     // 0x68 - current count
 	};
+	static_assert(offsetof(fwVehiclePool, m_PoolAddress) == 0x08);
+	static_assert(offsetof(fwVehiclePool, m_Size) == 0x10);
+	static_assert(offsetof(fwVehiclePool, m_BitArray) == 0x38);
+	static_assert(offsetof(fwVehiclePool, m_ItemCount) == 0x68);
 
 	// Decrypt PoolEncryption to get fwBasePool pointer
 	// rotateExtra: +2 for PedPool, +3 for ObjectPool

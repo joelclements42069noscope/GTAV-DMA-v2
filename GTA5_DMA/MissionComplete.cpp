@@ -6,20 +6,24 @@
 
 namespace MC
 {
-	// Common locals for fm_mission_controller heists
-	static constexpr size_t MISSION_STATE = 20395;       // Mission state machine
-	static constexpr size_t RESULT_CODE = 21457;          // 20395 + 1062 = success code
-	static constexpr size_t PAYOUT = 29017;               // 29016 + 1 = payout value
-	static constexpr size_t COMPLETION_CTR = 32541;       // 32472 + 1 + 68 = completion counter
-	static constexpr size_t TAKE_VALUE = 23081;           // 20395 + 2686 = take value
+	// Common locals for fm_mission_controller heists.
+	// Re-based for Enhanced b1158.13 (2026-07-17 upstream update). Pre-1.73
+	// values shown in parentheses; the fm_mission_controller base shifted
+	// 20395 -> 20412 (+17), the payout array 29016 -> 29326, and the
+	// completion array 32472 -> 32785.
+	static constexpr size_t MISSION_STATE = 20412;       // (was 20395) mission state machine
+	static constexpr size_t RESULT_CODE = 21474;          // 20412 + 1062  (was 21457)
+	static constexpr size_t PAYOUT = 29327;               // 29326 + 1     (was 29017)
+	static constexpr size_t COMPLETION_CTR = 32854;       // 32785 + 1 + 68 (was 32541)
+	static constexpr size_t TAKE_VALUE = 23098;           // 20412 + 2686  (was 23081)
 
 	// Heist-specific completion flags
-	static constexpr size_t CASINO_COMPLETION = 22136;    // 20395 + 1740 + 1
-	static constexpr size_t APT_COMPLETION = 22121;       // 20395 + 1725 + 1
+	static constexpr size_t CASINO_COMPLETION = 22153;    // 20412 + 1740 + 1 (was 22136)
+	static constexpr size_t APT_COMPLETION = 22138;       // 20412 + 1725 + 1 (was 22121)
 
 	// Cayo Perico (fm_mission_controller_2020)
-	static constexpr size_t CAYO_STATE = 56223;
-	static constexpr size_t CAYO_COMPLETION = 58000;      // 56223 + 1776 + 1
+	static constexpr size_t CAYO_STATE = 56504;           // (was 56223)
+	static constexpr size_t CAYO_COMPLETION = 58281;      // 56504 + 1776 + 1 (was 58000)
 
 	static constexpr uint32_t MC_HASH = DMAScript::Joaat("fm_mission_controller");
 	static constexpr uint32_t MC2020_HASH = DMAScript::Joaat("fm_mission_controller_2020");
